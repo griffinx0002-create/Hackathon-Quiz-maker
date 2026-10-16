@@ -1,0 +1,903 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QuizDrop AI</title>
+
+<style>
+:root {
+  --bg: #f5f7fb;
+  --card: #ffffff;
+  --text: #172033;
+  --muted: #667085;
+  --primary: #635bff;
+  --border: #e5e7eb;
+  --good: #168a4a;
+  --bad: #c93636;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.app {
+  max-width: 950px;
+  margin: auto;
+  padding: 22px 16px 50px;
+}
+
+.hero {
+  text-align: center;
+  padding: 22px 8px;
+}
+
+.logo {
+  display: inline-grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+  background: var(--primary);
+  color: white;
+  font-size: 28px;
+  font-weight: 900;
+}
+
+h1 {
+  font-size: clamp(32px, 7vw, 50px);
+  margin: 12px 0 6px;
+}
+
+.sub {
+  color: var(--muted);
+  margin: 0 auto;
+  max-width: 650px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 22px;
+  box-shadow: 0 8px 30px #1018280d;
+  margin-top: 18px;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.tab {
+  flex: 1;
+  background: #f0f1f5;
+  color: var(--text);
+}
+
+.tab.active {
+  background: #eeecff;
+  color: var(--primary);
+}
+
+.drop {
+  display: block;
+  border: 2px dashed #bfc3d4;
+  border-radius: 18px;
+  padding: 30px;
+  text-align: center;
+  cursor: pointer;
+  background: #fafaff;
+}
+
+.drop:hover {
+  border-color: var(--primary);
+}
+
+.drop strong {
+  display: block;
+  font-size: 19px;
+  margin-bottom: 6px;
+}
+
+.drop span {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+input[type=file] { display: none; }
+
+label {
+  font-weight: 750;
+  display: block;
+  margin: 14px 0 8px;
+}
+
+input[type=text], select {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: white;
+  font: inherit;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+button {
+  border: 0;
+  border-radius: 13px;
+  padding: 13px 17px;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.primary {
+  background: var(--primary);
+  color: white;
+}
+
+.secondary {
+  background: #eef0f5;
+  color: var(--text);
+}
+
+.generate {
+  width: 100%;
+  margin-top: 18px;
+  font-size: 16px;
+}
+
+.file {
+  display: none;
+  margin-top: 12px;
+  padding: 11px 13px;
+  background: #f0f1f5;
+  border-radius: 12px;
+  overflow-wrap: anywhere;
+}
+
+.file.show { display: block; }
+
+.note {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin-top: 12px;
+}
+
+.status {
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #f0f1f5;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.status.error {
+  background: #fff0f0;
+  color: #9b2222;
+}
+
+.status.success {
+  background: #eaf8f0;
+  color: #176b3a;
+}
+
+.hidden { display: none !important; }
+
+.quizhead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.badge {
+  background: #eeecff;
+  color: var(--primary);
+  padding: 6px 10px;
+  border-radius: 99px;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.question {
+  font-size: 22px;
+  font-weight: 850;
+  line-height: 1.45;
+}
+
+.choice {
+  width: 100%;
+  text-align: left;
+  margin: 7px 0;
+  background: #fafbff;
+  border: 1px solid var(--border);
+}
+
+.choice:hover:not(:disabled) {
+  border-color: var(--primary);
+}
+
+.choice.correct {
+  background: #eaf8f0;
+  border-color: var(--good);
+}
+
+.choice.wrong {
+  background: #fff0f0;
+  border-color: var(--bad);
+}
+
+.feedback {
+  padding: 13px;
+  background: #f7f8fb;
+  border-radius: 12px;
+  margin-top: 12px;
+  line-height: 1.6;
+}
+
+.actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.score {
+  text-align: center;
+  font-size: 58px;
+  font-weight: 900;
+  color: var(--primary);
+}
+
+@media (max-width: 620px) {
+  .row { grid-template-columns: 1fr; }
+  .actions { flex-direction: column; }
+  .actions button { width: 100%; }
+  .card { padding: 17px; }
+  .quizhead { align-items: flex-start; }
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+<header class="hero">
+  <div class="logo">Q</div>
+  <h1>QuizDrop AI</h1>
+  <p class="sub">
+    Upload your study material or enter a topic.
+    Turn your learning into an interactive quiz.
+  </p>
+</header>
+
+<section class="card" id="setup">
+
+  <div class="tabs">
+    <button class="tab active" id="uploadTab"
+      onclick="mode('upload')">📄 Upload Material</button>
+
+    <button class="tab" id="topicTab"
+      onclick="mode('topic')">💡 Enter Topic</button>
+  </div>
+
+  <div id="uploadArea">
+    <label class="drop" for="fileInput">
+      <strong>📎 Choose an image of your notes</strong>
+      <span>JPG, PNG or WebP · Maximum 10 MB</span>
+      <input
+        id="fileInput"
+        type="file"
+        accept="image/png,image/jpeg,image/webp">
+    </label>
+
+    <div class="file" id="fileName"></div>
+
+    <p class="note">
+      Gemini will analyze the selected image and create questions
+      based on the visible study material. Clear, readable images
+      work best.
+    </p>
+  </div>
+
+  <div id="topicArea" class="hidden">
+    <label for="topic">Topic</label>
+    <input id="topic" type="text"
+      placeholder="e.g. Photosynthesis, Python, Indian History">
+    <p class="note">
+      Topic mode uses the app's built-in sample question banks.
+      AI-generated topic quizzes are not connected yet.
+    </p>
+  </div>
+
+  <div class="row">
+    <div>
+      <label for="difficulty">Difficulty</label>
+      <select id="difficulty">
+        <option>Easy</option>
+        <option selected>Medium</option>
+        <option>Hard</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="count">Questions</label>
+      <select id="count">
+        <option>5</option>
+        <option selected>10</option>
+        <option>15</option>
+      </select>
+    </div>
+  </div>
+
+  <button class="primary generate" id="generateButton"
+    onclick="generate()">✨ Generate Quiz</button>
+
+  <div id="status" class="status hidden" role="status"
+    aria-live="polite"></div>
+</section>
+
+<section class="card hidden" id="quiz">
+  <div class="quizhead">
+    <span class="badge" id="source"></span>
+    <span id="progress"></span>
+  </div>
+
+  <div class="question" id="question"></div>
+  <div id="choices"></div>
+
+  <div class="feedback hidden" id="feedback"
+    aria-live="polite"></div>
+
+  <div class="actions">
+    <button class="secondary" onclick="resetApp()">New Quiz</button>
+    <button class="primary" id="next"
+      onclick="next()">Next</button>
+  </div>
+</section>
+
+<section class="card hidden" id="result">
+  <div class="score" id="score"></div>
+  <h2 style="text-align:center">Quiz complete!</h2>
+  <p style="text-align:center;color:var(--muted)" id="resultText"></p>
+  <button class="primary generate" onclick="resetApp()">
+    Create Another Quiz
+  </button>
+</section>
+
+</div>
+
+<script>
+"use strict";
+
+/*
+  The backend must be running at localhost:3000.
+  Keep your API key in the backend's .env file, never in this HTML.
+*/
+const API_URL = "http://localhost:3000/api/generate-quiz";
+
+let modeNow = "upload";
+let qs = [];
+let pos = 0;
+let points = 0;
+let answered = false;
+
+const banks = {
+  photosynthesis: [
+    ["What is the main pigment used in photosynthesis?",
+      ["Chlorophyll", "Hemoglobin", "Keratin", "Melanin"], 0,
+      "Chlorophyll captures light energy."],
+
+    ["Which gas is used by plants during photosynthesis?",
+      ["Oxygen", "Carbon dioxide", "Nitrogen", "Hydrogen"], 1,
+      "Carbon dioxide supplies carbon for carbohydrate production."],
+
+    ["Where does the Calvin cycle occur?",
+      ["Stroma", "Nucleus", "Cytoplasm", "Cell wall"], 0,
+      "The Calvin cycle occurs in the chloroplast stroma."],
+
+    ["Which organelle performs photosynthesis?",
+      ["Mitochondrion", "Chloroplast", "Ribosome", "Golgi body"], 1,
+      "Chloroplasts contain the photosynthetic machinery."],
+
+    ["What energy source drives photosynthesis?",
+      ["Light", "Sound", "Friction", "Gravity"], 0,
+      "Light energy powers the photosynthetic reactions."]
+  ],
+
+  python: [
+    ["Which keyword defines a function in Python?",
+      ["func", "def", "function", "define"], 1,
+      "Python uses the def keyword."],
+
+    ["Which collection is ordered and mutable?",
+      ["Tuple", "List", "Set", "Frozen set"], 1,
+      "Lists are ordered and mutable."],
+
+    ["What does len() return?",
+      ["The data type", "The number of items",
+       "The memory address", "The last index"], 1,
+      "len() gives the number of items or characters."],
+
+    ["Which symbol starts a Python comment?",
+      ["//", "#", "--", "<!--"], 1,
+      "Python comments begin with #."],
+
+    ["Which value represents no value in Python?",
+      ["null", "nil", "None", "void"], 2,
+      "None is Python's null-value object."]
+  ],
+
+  math: [
+    ["What is 12 × 8?", ["86", "96", "108", "88"], 1,
+      "12 × 8 = 96."],
+
+    ["What is √81?", ["7", "8", "9", "10"], 2,
+      "9 × 9 = 81."],
+
+    ["What is the sum of angles in a triangle?",
+      ["90°", "180°", "270°", "360°"], 1,
+      "The interior angles sum to 180°."],
+
+    ["What is 15% of 200?",
+      ["15", "20", "30", "40"], 2,
+      "0.15 × 200 = 30."],
+
+    ["What is the approximate value of π?",
+      ["2.14", "3.14", "4.14", "5.14"], 1,
+      "π is approximately 3.14159."]
+  ],
+
+  science: [
+    ["What is the basic unit of life?",
+      ["Atom", "Cell", "Organ", "Tissue"], 1,
+      "Cells are the basic units of life."],
+
+    ["Which force attracts masses?",
+      ["Friction", "Gravity", "Magnetism", "Pressure"], 1,
+      "Gravity attracts masses toward one another."],
+
+    ["What is H₂O?", ["Salt", "Oxygen", "Water", "Hydrogen"], 2,
+      "H₂O is water."],
+
+    ["Which planet has famous rings?",
+      ["Mars", "Saturn", "Venus", "Mercury"], 1,
+      "Saturn has a prominent ring system."],
+
+    ["What process lets plants use light to make food?",
+      ["Respiration", "Photosynthesis", "Digestion", "Fermentation"], 1,
+      "Plants use photosynthesis to make food."]
+  ]
+};
+
+const generic = [
+  ["What is a useful way to learn a new topic?",
+    ["Only reread it", "Break it into concepts and test yourself",
+     "Memorize random facts", "Avoid practice"], 1,
+    "Active recall and concept-based study are useful."],
+
+  ["Why are quizzes useful for learning?",
+    ["They use active recall", "They eliminate studying",
+     "They guarantee 100%", "They replace every textbook"], 0,
+    "Retrieving information helps reveal knowledge gaps."],
+
+  ["What should you do after an incorrect answer?",
+    ["Ignore it", "Review the explanation and retry",
+     "Stop learning", "Repeat the same guess"], 1,
+    "Reviewing errors helps strengthen understanding."],
+
+  ["Which approach helps long-term retention?",
+    ["Spaced practice", "One-night cramming",
+     "Never reviewing", "Only highlighting"], 0,
+    "Spaced practice distributes retrieval over time."],
+
+  ["What should a good question test?",
+    ["A meaningful concept", "Only font size",
+     "Nothing", "A random guess"], 0,
+    "Good questions check meaningful understanding."]
+];
+
+function mode(m) {
+  modeNow = m;
+
+  document.getElementById("uploadArea")
+    .classList.toggle("hidden", m !== "upload");
+
+  document.getElementById("topicArea")
+    .classList.toggle("hidden", m !== "topic");
+
+  document.getElementById("uploadTab")
+    .classList.toggle("active", m === "upload");
+
+  document.getElementById("topicTab")
+    .classList.toggle("active", m === "topic");
+
+  clearStatus();
+}
+
+document.getElementById("fileInput").addEventListener("change", e => {
+  const file = e.target.files[0];
+  const box = document.getElementById("fileName");
+
+  if (!file) {
+    box.classList.remove("show");
+    box.textContent = "";
+    return;
+  }
+
+  box.textContent =
+    "Selected: " + file.name + " • " +
+    Math.round(file.size / 1024) + " KB";
+
+  box.classList.add("show");
+  clearStatus();
+});
+
+function findBank(topic) {
+  const t = topic.toLowerCase();
+
+  if (t.includes("photo")) return "photosynthesis";
+  if (t.includes("python")) return "python";
+
+  if (
+    t.includes("math") ||
+    t.includes("algebra") ||
+    t.includes("geometry")
+  ) return "math";
+
+  if (
+    t.includes("science") ||
+    t.includes("biology") ||
+    t.includes("physics") ||
+    t.includes("chemistry")
+  ) return "science";
+
+  return null;
+}
+
+function showStatus(message, type = "") {
+  const box = document.getElementById("status");
+  box.textContent = message;
+  box.className = "status";
+
+  if (type) box.classList.add(type);
+}
+
+function clearStatus() {
+  const box = document.getElementById("status");
+  box.textContent = "";
+  box.className = "status hidden";
+}
+
+async function readImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => resolve(reader.result);
+
+    reader.onerror = () => reject(
+      new Error("The selected image could not be read.")
+    );
+
+    reader.readAsDataURL(file);
+  });
+}
+
+async function requestAIQuiz(file, questionCount, difficulty) {
+  const imageData = await readImage(file);
+
+  let response;
+
+  try {
+    response = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        imageData,
+        mimeType: file.type,
+        questionCount,
+        difficulty
+      })
+    });
+  } catch (error) {
+    throw new Error(
+      "Cannot reach the backend. Make sure node server.js is running " +
+      "on port 3000, then reload the app."
+    );
+  }
+
+  let data;
+
+  try {
+    data = await response.json();
+  } catch {
+    throw new Error("The server returned an unreadable response.");
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      data.error ||
+      "AI quiz generation failed (HTTP " + response.status + ")."
+    );
+  }
+
+  if (!Array.isArray(data.questions) || data.questions.length === 0) {
+    throw new Error("The AI did not return any questions. Please try again.");
+  }
+
+  return data.questions.map((q, index) => {
+    if (
+      !q ||
+      typeof q.question !== "string" ||
+      !Array.isArray(q.options) ||
+      q.options.length !== 4 ||
+      !q.options.every(option => typeof option === "string") ||
+      !Number.isInteger(q.correctIndex) ||
+      q.correctIndex < 0 ||
+      q.correctIndex > 3
+    ) {
+      throw new Error(
+        "The AI returned an invalid question at position " +
+        (index + 1) + ". Please try again."
+      );
+    }
+
+    return {
+      q: q.question,
+      c: q.options.map((value, i) => ({
+        v: value,
+        ok: i === q.correctIndex
+      })),
+      ex: typeof q.explanation === "string"
+        ? q.explanation
+        : "Review your study material for this answer."
+    };
+  });
+}
+
+async function generate() {
+  const file = document.getElementById("fileInput").files[0];
+  const topic = document.getElementById("topic").value.trim();
+  const count = Number(document.getElementById("count").value);
+  const difficulty = document.getElementById("difficulty").value;
+  const button = document.getElementById("generateButton");
+
+  clearStatus();
+
+  if (modeNow === "upload" && !file) {
+    showStatus("Please choose an image of your study notes.", "error");
+    return;
+  }
+
+  if (modeNow === "topic" && !topic) {
+    showStatus("Please enter a topic.", "error");
+    return;
+  }
+
+  if (modeNow === "upload") {
+    const supportedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp"
+    ];
+
+    if (!supportedTypes.includes(file.type)) {
+      showStatus("Please upload a JPG, PNG or WebP image.", "error");
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      showStatus("Your image is too large. Choose an image under 10 MB.", "error");
+      return;
+    }
+
+    if (count > 10) {
+      showStatus(
+        "Image quizzes currently support up to 10 questions. " +
+        "Choose 5 or 10 questions.",
+        "error"
+      );
+      return;
+    }
+  }
+
+  button.disabled = true;
+  button.textContent = "✨ Generating quiz...";
+
+  try {
+    let questions;
+
+    if (modeNow === "upload") {
+      showStatus(
+        "Sending your notes to Gemini AI. This may take a little while."
+      );
+
+      questions = await requestAIQuiz(file, count, difficulty);
+
+    } else {
+      const bankKey = findBank(topic);
+      const pool = bankKey ? banks[bankKey] : generic;
+      let selected = [];
+
+      while (selected.length < count) {
+        selected = selected.concat(pool);
+      }
+
+      selected = selected.slice(0, count);
+
+      questions = selected.map(item => ({
+        q: item[0],
+        c: item[1].map((value, i) => ({
+          v: value,
+          ok: i === item[2]
+        })),
+        ex: item[3]
+      }));
+    }
+
+    qs = questions.map(item => ({
+      ...item,
+      c: [...item.c].sort(() => Math.random() - 0.5)
+    }));
+
+    pos = 0;
+    points = 0;
+    answered = false;
+
+    document.getElementById("setup").classList.add("hidden");
+    document.getElementById("result").classList.add("hidden");
+    document.getElementById("quiz").classList.remove("hidden");
+
+    document.getElementById("source").textContent =
+      modeNow === "upload" ? file.name : topic;
+
+    render();
+
+  } catch (error) {
+    console.error("Quiz generation error:", error);
+
+    showStatus(
+      error.message || "Something went wrong. Please try again.",
+      "error"
+    );
+
+  } finally {
+    button.disabled = false;
+    button.textContent = "✨ Generate Quiz";
+  }
+}
+
+function render() {
+  const item = qs[pos];
+
+  document.getElementById("progress").textContent =
+    `Question ${pos + 1} of ${qs.length}`;
+
+  document.getElementById("question").textContent = item.q;
+
+  const box = document.getElementById("choices");
+  box.replaceChildren();
+
+  const feedback = document.getElementById("feedback");
+  feedback.classList.add("hidden");
+  feedback.textContent = "";
+
+  document.getElementById("next").textContent =
+    pos === qs.length - 1 ? "Finish Quiz" : "Next Question";
+
+  answered = false;
+
+  item.c.forEach((choice, index) => {
+    const button = document.createElement("button");
+
+    button.className = "choice";
+    button.textContent =
+      `${String.fromCharCode(65 + index)}. ${choice.v}`;
+
+    button.onclick = () => answer(index);
+
+    box.appendChild(button);
+  });
+}
+
+function answer(index) {
+  if (answered) return;
+
+  answered = true;
+
+  const item = qs[pos];
+  const buttons = [...document.querySelectorAll(".choice")];
+
+  buttons.forEach((button, i) => {
+    button.disabled = true;
+
+    if (item.c[i].ok) {
+      button.classList.add("correct");
+    } else if (i === index) {
+      button.classList.add("wrong");
+    }
+  });
+
+  if (item.c[index].ok) points++;
+
+  const feedback = document.getElementById("feedback");
+
+  feedback.textContent =
+    (item.c[index].ok ? "✓ Correct! " : "✗ Not quite. ") +
+    item.ex;
+
+  feedback.classList.remove("hidden");
+}
+
+function next() {
+  if (!answered) {
+    showStatus("Choose an answer before continuing.", "error");
+    return;
+  }
+
+  clearStatus();
+
+  if (pos === qs.length - 1) {
+    document.getElementById("quiz").classList.add("hidden");
+    document.getElementById("result").classList.remove("hidden");
+
+    const percentage = Math.round(points / qs.length * 100);
+
+    document.getElementById("score").textContent =
+      `${points}/${qs.length}`;
+
+    document.getElementById("resultText").textContent =
+      `Score: ${percentage}% — ` +
+      (percentage >= 80
+        ? "Excellent work!"
+        : percentage >= 60
+          ? "Good job! Keep practicing."
+          : "Keep learning and try again!");
+
+  } else {
+    pos++;
+    render();
+  }
+}
+
+function resetApp() {
+  qs = [];
+  pos = 0;
+  points = 0;
+  answered = false;
+
+  document.getElementById("quiz").classList.add("hidden");
+  document.getElementById("result").classList.add("hidden");
+  document.getElementById("setup").classList.remove("hidden");
+
+  clearStatus();
+}
+</script>
+</body>
+</html>
